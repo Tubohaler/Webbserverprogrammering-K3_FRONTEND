@@ -1,45 +1,34 @@
-import { useState } from 'react'
-import logo from './logo.svg'
-import './App.css'
+import { useState, useEffect } from "react";
+
+import { io } from "socket.io-client";
+import "./App.css";
+
+let socket;
 
 function App() {
-  const [count, setCount] = useState(0)
+  useEffect(() => {
+    socket = io("http://localhost:4000");
+
+    socket.on("connect", () => {
+      console.log("Connected to server");
+    });
+
+    socket.on("send-message", (data) => console.log(data));
+
+    return () => socket.off();
+  }, []);
+
+  function messageHandler() {
+    socket.emit("send-message", "Hello server!");
+  }
 
   return (
     <div className="App">
       <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>Hello Vite + React!</p>
-        <p>
-          <button type="button" onClick={() => setCount((count) => count + 1)}>
-            count is: {count}
-          </button>
-        </p>
-        <p>
-          Edit <code>App.jsx</code> and save to test HMR updates.
-        </p>
-        <p>
-          <a
-            className="App-link"
-            href="https://reactjs.org"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Learn React
-          </a>
-          {' | '}
-          <a
-            className="App-link"
-            href="https://vitejs.dev/guide/features.html"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Vite Docs
-          </a>
-        </p>
+        <button onClick={messageHandler}>Send message</button>
       </header>
     </div>
-  )
+  );
 }
 
-export default App
+export default App;
