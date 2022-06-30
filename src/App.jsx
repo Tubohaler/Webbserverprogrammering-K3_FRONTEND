@@ -9,6 +9,8 @@ function App() {
   const [socketId, setSocketId] = useState("");
   const [user, setUser] = useState("");
   const [room, setRoom] = useState("");
+  const [message, setMessage] = useState({ message: "" });
+  const [messageHistory, setMessageHistory] = useState([]);
 
   useEffect(() => {
     socket = io("http://localhost:4000");
@@ -44,20 +46,23 @@ function App() {
     return () => socket.off();
   }, []);
 
-  function createRoom() {
+  function handleCreateUser() {
+    socket.emit("create_user", user);
+  }
+
+  function handleCreateRoom() {
     socket.emit("create_room", room);
   }
 
-  function joinRoom() {
-    const nameRoom = prompt("What room willt thou liketh to joineth?");
-    socket.emit("join_room", nameRoom);
+  function handleJoinRoom() {
+    socket.emit("join_room", room);
   }
 
-  function leaveRoom(nameRoom) {
+  function handleLeaveRoom(nameRoom) {
     socket.emit("leave_room", nameRoom);
   }
 
-  function messageHandler() {
+  function handleMessage() {
     socket.emit("send_message", "Hello server!");
   }
 
@@ -65,18 +70,11 @@ function App() {
     socket.emit("send_message", { message: "Detta är ett PM", to: socketId });
   }
 
-  function handleCreateUser() {
-    socket.emit("create_user", user);
-  }
-
-  function handleJoinRoom() {
-    socket.emit("join_room", room);
-  }
-
   return (
     <div className="App">
       <header className="App-header">
         <form onSubmit={(e) => e.preventDefault()}>
+          {/* Create user */}
           <input
             type="text"
             placeholder="enter username"
@@ -87,25 +85,55 @@ function App() {
           />
           <button onClick={handleCreateUser}>Create user</button>
 
+          {/* Create new room */}
           <input
             type="text"
-            placeholder="enter room name"
+            placeholder="new room name"
             value={room}
             onChange={(e) => setRoom(e.target.value)}
             required
             autoComplete="off"
           />
-          <button onClick={createRoom}>Create a room</button>
+          <button onClick={handleCreateRoom}>Create a New Room</button>
+
+          {/* Join room */}
+          <input
+            type="text"
+            placeholder="enter room"
+            value={room}
+            onChange={(e) => setRoom(e.target.value)}
+            autoComplete="off"
+          />
           <button onClick={handleJoinRoom}>Join a room</button>
-          <button onClick={messageHandler}>Send message</button>
-          <div>{/* <input type="text">messages</input> */}</div>
-          <button onClick={handleDM}>Private message</button>
+
+          {/* Message */}
+          <input
+            type="text"
+            placeholder="send a message"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            autoComplete="off"
+          />
+          <button onClick={handleMessage}>Send message</button>
+
+          {/* <input
+            type="text"
+            placeholder="send DM"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            autoComplete="off"
+          />
+          <button onClick={handleDM}>Private message</button> */}
+
+          {/* Leave room */}
           <input
             name="socket-id"
             value={socketId}
             onChange={(e) => setSocketId(e.target.value)}
           />
-          <button onClick={() => leaveRoom("piri room")}>Leave the room</button>
+          <button onClick={() => handleLeaveRoom("mancave")}>
+            Leave the room
+          </button>
         </form>
       </header>
     </div>
