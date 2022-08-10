@@ -30,7 +30,6 @@ function App() {
     });
 
     socket.on("delete_room", (newRooms) => {
-      console.log(newRooms);
       setRoom("");
       console.log(`Room ${data} has been deleted.`);
     });
@@ -45,9 +44,7 @@ function App() {
 
     socket.on("send_message", (data) => console.log(data));
 
-    socket.on("new_user", (data) => {
-      console.log(data);
-    });
+    socket.on("new_user", (data) => {});
 
     return () => socket.off();
   }, []);
@@ -169,5 +166,3 @@ function App() {
 }
 
 export default App;
-
-// 2) databas för rum och meddelanden   5) ska inte kunna skapa rum som redan finns 6) behöver skriva en funktion att deleta ett rum, knapp på frontend 7) när man deletar ett rum så tas alla meddelanden bort i det rummet. 8) hantera meddelanden, som create user fast create message. Rekommenderar att hämta alla meddelanden så att alla i rummet kan se dem. 9) vem har skrivit och vilket tid och vilket rum 10) skapa middleware log som sparar alla meddelanden. 11) göra en funktion på backend som stoppar tomma meddelanden.
