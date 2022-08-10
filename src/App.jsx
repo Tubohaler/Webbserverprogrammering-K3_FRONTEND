@@ -3,18 +3,18 @@ import { useState, useEffect } from "react";
 import { io } from "socket.io-client";
 import "./App.css";
 
-let socket;
+const socket = io("http://localhost:4000", { autoConnect: false });
+socket.connect();
 
 function App() {
   const [socketId, setSocketId] = useState("");
   const [user, setUser] = useState("");
   const [room, setRoom] = useState("");
-  const [message, setMessage] = useState({ message: "" });
+  const [message, setMessage] = useState("");
   const [messageHistory, setMessageHistory] = useState([]);
+  const [updateRoom, setUpdateRoom] = useState("");
 
   useEffect(() => {
-    socket = io("http://localhost:4000");
-
     socket.on("connect", () => {
       console.log("Connected to server");
     });
@@ -29,8 +29,14 @@ function App() {
       console.log(`Room ${data} has been created.`);
     });
 
-    socket.on("room_joined", (data) => {
-      console.log(`${user} has joined the room ${data}.`);
+    socket.on("delete_room", (newRooms) => {
+      console.log(newRooms);
+      setRoom("");
+      console.log(`Room ${data} has been deleted.`);
+    });
+
+    socket.on("join_room", (data) => {
+      setMessageHistory(data);
     });
 
     socket.on("disconnect", () => {
@@ -54,25 +60,28 @@ function App() {
     socket.emit("create_room", room);
   }
 
+  function handleDeleteRoom() {
+    socket.emit("delete_room", room);
+  }
+
   function handleJoinRoom() {
     socket.emit("join_room", room);
+    setUpdateRoom(room);
   }
 
   function handleLeaveRoom(nameRoom) {
     socket.emit("leave_room", nameRoom);
+    setUpdateRoom("");
   }
 
-  function handleMessage() {
-    socket.emit("send_message", "Hello server!");
-  }
-
-  function handleDM() {
-    socket.emit("send_message", { message: "Detta är ett PM", to: socketId });
+  function handleMessage(message) {
+    socket.emit("send_message", message);
   }
 
   return (
     <div className="App">
-      <header className="App-header">
+      <header>Tjenixxen chat service</header>
+      <section>
         <form onSubmit={(e) => e.preventDefault()}>
           {/* Create user */}
           <input
@@ -96,6 +105,16 @@ function App() {
           />
           <button onClick={handleCreateRoom}>Create a New Room</button>
 
+          {/* Delete room */}
+          <input
+            type="text"
+            placeholder="delete room with name"
+            value={room}
+            onChange={(e) => setRoom(e.target.value)}
+            autoComplete="off"
+          />
+          <button onClick={handleDeleteRoom}>Delete room</button>
+
           {/* Join room */}
           <input
             type="text"
@@ -105,7 +124,11 @@ function App() {
             autoComplete="off"
           />
           <button onClick={handleJoinRoom}>Join a room</button>
-
+        </form>
+      </section>
+      <section>
+        <h1>{updateRoom}</h1>
+        <form onSubmit={(e) => e.preventDefault()}>
           {/* Message */}
           <input
             type="text"
@@ -114,16 +137,7 @@ function App() {
             onChange={(e) => setMessage(e.target.value)}
             autoComplete="off"
           />
-          <button onClick={handleMessage}>Send message</button>
-
-          {/* <input
-            type="text"
-            placeholder="send DM"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            autoComplete="off"
-          />
-          <button onClick={handleDM}>Private message</button> */}
+          <button onClick={() => handleMessage(message)}>Send message</button>
 
           {/* Leave room */}
           <input
@@ -135,11 +149,25 @@ function App() {
             Leave the room
           </button>
         </form>
-      </header>
+      </section>
+      <section>
+        <h3> Message Board</h3>
+        <div>
+          {messageHistory.map((obj) => {
+            return (
+              <div key={obj.id}>
+                <h2>id: {obj.user_id}</h2>
+                <h2>room: {obj.room_id}</h2>
+                <h2>created_at: {obj.created_at}</h2>
+              </div>
+            );
+          })}
+        </div>
+      </section>
     </div>
   );
 }
 
 export default App;
 
-// 1) hur ska jag visa användaren att detta är ett rum 2) databas för rum och meddelanden 3) testa om jag kan joina olika rum 4) när jag skapar ett rum bör man veta vilket rum en joinar (antingen namnet eller id) 5) ska inte kunna skapa rum som redan finns 6) behöver skriva en funktion att deleta ett rum, knapp på frontend 7) när man deletar ett rum så tas alla meddelanden bort i det rummet. 8) hantera meddelanden, som create user fast create message. Rekommenderar att hämta alla meddelanden så att alla i rummet kan se dem. 9) vem har skrivit och vilket tid och vilket rum 10) skapa middleware log som sparar alla meddelanden. 11) göra en funktion på backend som stoppar tomma meddelanden.
+// 2) databas för rum och meddelanden   5) ska inte kunna skapa rum som redan finns 6) behöver skriva en funktion att deleta ett rum, knapp på frontend 7) när man deletar ett rum så tas alla meddelanden bort i det rummet. 8) hantera meddelanden, som create user fast create message. Rekommenderar att hämta alla meddelanden så att alla i rummet kan se dem. 9) vem har skrivit och vilket tid och vilket rum 10) skapa middleware log som sparar alla meddelanden. 11) göra en funktion på backend som stoppar tomma meddelanden.
